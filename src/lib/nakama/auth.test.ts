@@ -1,0 +1,148 @@
+import { Session } from "@heroiclabs/nakama-js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AppError } from "@/lib/errors";
+import { loginWithEmail, registerWithEmail, signOutSession } from "@/lib/nakama/auth";
+import type { NakamaGateway } from "@/lib/nakama/client";
+
+function jwt(payload: Record<string, unknown>) {
+  const header = Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })).toString(
+    "base64url",
+  );
+  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  return `${header}.${body}.sig`;
+}
+
+function makeSession(created = false, username = "player_one") {
+  const now = Math.floor(Date.now() / 1000);
+  return new Session(
+    jwt({ exp: now + 3600, usn: username, uid: "user-1" }),
+    jwt({ exp: now + 86400 }),
+    created,
+  );
+}
+
+function mockClient(partial: Partial<NakamaGateway> = {}): NakamaGateway {
+  return {
+    authenticateEmail: vi.fn(),
+    sessionRefresh: vi.fn(),
+    sessionLogout: vi.fn().mockResolvedValue(true),
+    getAccount: vi.fn(),
+    getUsers: vi.fn(),
+    updateAccount: vi.fn().mockResolvedValue(true),
+    deleteAccount: vi.fn().mockResolvedValue(true),
+    ...partial,
+  };
+}
+
+const registerInput = {
+  email: "player@xoranetwork.com",
+  username: "player_one",
+  displayName: "Player One",
+  password: "Correct1",
+};
+
+describe("authentication", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("registers with account creation explicitly enabled", async () => {
+    const session = makeSession(true);
+    const client = mockClient({
+      authenticateEmail: vi.fn().mockResolvedValue(session),
+    });
+
+    const result = await registerWithEmail(registerInput, client);
+
+    expect(client.authenticateEmail).toHaveBeenCalledWith(
+      registerInput.email,
+      registerInput.password,
+      true,
+      registerInput.username,
+    );
+    expect(client.updateAccount).toHaveBeenCalledWith(session, {
+      display_name: registerInput.displayName,
+    });
+    expect(result).toBe(session);
+  });
+
+  it("does not treat an existing-account login as registration", async () => {
+    const session = makeSession(false);
+    const client = mockClient({
+      authenticateEmail: vi.fn().mockResolvedValue(session),
+    });
+
+    await expect(registerWithEmail(registerInput, client)).rejects.toMatchObject({
+      code: "EMAIL_REGISTERED",
+    });
+    expect(client.sessionLogout).toHaveBeenCalled();
+  });
+
+  it("logs in with account creation explicitly disabled", async () => {
+    const session = makeSession(false);
+    const client = mockClient({
+      authenticateEmail: vi.fn().mockResolvedValue(session),
+    });
+
+    const result = await loginWithEmail(
+      {
+        email: registerInput.email,
+        password: registerInput.password,
+        rememberMe: true,
+      },
+      client,
+    );
+
+    expect(client.authenticateEmail).toHaveBeenCalledWith(
+      registerInput.email,
+      registerInput.password,
+      false,
+    );
+    expect(result).toBe(session);
+  });
+
+  it("maps invalid credentials to a friendly error", async () => {
+    const client = mockClient({
+      authenticateEmail: vi.fn().mockRejectedValue(
+        new Response(JSON.stringify({ message: "Invalid credentials." }), {
+          status: 401,
+        }),
+      ),
+    });
+
+    await expect(
+      loginWithEmail(
+        {
+          email: registerInput.email,
+          password: "WrongPass1",
+          rememberMe: false,
+        },
+        client,
+      ),
+    ).rejects.toBeInstanceOf(AppError);
+
+    await expect(
+      loginWithEmail(
+        {
+          email: registerInput.email,
+          password: "WrongPass1",
+          rememberMe: false,
+        },
+        client,
+      ),
+    ).rejects.toMatchObject({ code: "INVALID_CREDENTIALS" });
+  });
+
+  it("signs out by invalidating the Nakama session", async () => {
+    const session = makeSession();
+    const client = mockClient();
+
+    await signOutSession(session, client);
+
+    expect(client.sessionLogout).toHaveBeenCalledWith(
+      session,
+      session.token,
+      session.refresh_token,
+    );
+  });
+});

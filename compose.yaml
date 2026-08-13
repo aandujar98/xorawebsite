@@ -1,0 +1,15 @@
+services:
+  account:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+      SITE_URL: https://account.xoranetwork.com
+      NEXT_PUBLIC_NAKAMA_HOST: api.xoranetwork.com
+      NEXT_PUBLIC_NAKAMA_PORT: "443"
+      NEXT_PUBLIC_NAKAMA_SSL: "true"
+      NAKAMA_SERVER_KEY: ${NAKAMA_SERVER_KEY}
