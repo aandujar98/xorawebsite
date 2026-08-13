@@ -6,7 +6,7 @@ import { useAccount } from "@/components/auth/AccountGate";
 import { ProfileHero } from "@/components/profile/ProfileHero";
 import { apiRequest, ApiClientError } from "@/lib/api/browser";
 import { FRIENDLY_ERROR_MESSAGES } from "@/types/api";
-import type { PublicProfile } from "@/types/account";
+import type { FriendEntry, FriendsList, PublicProfile } from "@/types/account";
 
 type ProfileQuery =
   | { status: "ok"; profile: PublicProfile }
@@ -33,6 +33,11 @@ async function loadProfile(username: string): Promise<ProfileQuery> {
 export function PublicProfileView({ username }: { username: string }) {
   const { account } = useAccount();
   const [result, setResult] = useState<ProfileQuery | "loading">("loading");
+  const [relation, setRelation] = useState<FriendEntry["state"] | "none" | "loading">(
+    isOwn ? "none" : "loading",
+  );
+  const [friendPending, setFriendPending] = useState(false);
+  const [friendMessage, setFriendMessage] = useState<string | null>(null);
   const isOwn = useMemo(
     () => account.username.toLowerCase() === username.toLowerCase(),
     [account.username, username],
@@ -49,6 +54,55 @@ export function PublicProfileView({ username }: { username: string }) {
       cancelled = true;
     };
   }, [username]);
+
+  useEffect(() => {
+    if (isOwn) {
+      return;
+    }
+
+    let cancelled = false;
+    void apiRequest<FriendsList>("/api/friends")
+      .then((list) => {
+        if (cancelled) {
+          return;
+        }
+        const match = [...list.friends, ...list.incoming, ...list.outgoing].find(
+          (entry) => entry.username.toLowerCase() === username.toLowerCase(),
+        );
+        setRelation(match?.state ?? "none");
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setRelation("none");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOwn, username]);
+
+  async function changeFriend(method: "POST" | "DELETE") {
+    setFriendPending(true);
+    setFriendMessage(null);
+    try {
+      const next = await apiRequest<FriendsList>("/api/friends", {
+        method,
+        body: JSON.stringify({ username }),
+      });
+      const match = [...next.friends, ...next.incoming, ...next.outgoing].find(
+        (entry) => entry.username.toLowerCase() === username.toLowerCase(),
+      );
+      setRelation(match?.state ?? "none");
+    } catch (error) {
+      setFriendMessage(
+        error instanceof ApiClientError
+          ? error.message
+          : FRIENDLY_ERROR_MESSAGES.UNEXPECTED,
+      );
+    } finally {
+      setFriendPending(false);
+    }
+  }
 
   if (result === "loading") {
     return (
@@ -99,7 +153,61 @@ export function PublicProfileView({ username }: { username: string }) {
               Edit Profile
             </Link>
           </div>
-        ) : null}
+        ) : (
+          <div className="button-row">
+            {relation === "friend" ? (
+              <button
+                className="button button-ghost"
+                type="button"
+                disabled={friendPending}
+                onClick={() => void changeFriend("DELETE")}
+              >
+                Remove friend
+              </button>
+            ) : relation === "incoming" ? (
+              <>
+                <button
+                  className="button button-primary"
+                  type="button"
+                  disabled={friendPending}
+                  onClick={() => void changeFriend("POST")}
+                >
+                  Accept request
+                </button>
+                <button
+                  className="button button-ghost"
+                  type="button"
+                  disabled={friendPending}
+                  onClick={() => void changeFriend("DELETE")}
+                >
+                  Decline
+                </button>
+              </>
+            ) : relation === "outgoing" ? (
+              <button
+                className="button button-ghost"
+                type="button"
+                disabled={friendPending}
+                onClick={() => void changeFriend("DELETE")}
+              >
+                Cancel request
+              </button>
+            ) : (
+              <button
+                className="button button-primary"
+                type="button"
+                disabled={friendPending || relation === "loading"}
+                onClick={() => void changeFriend("POST")}
+              >
+                Add Friend
+              </button>
+            )}
+            <Link className="button button-ghost" href="/friends">
+              Friends list
+            </Link>
+          </div>
+        )}
+        {friendMessage ? <p className="banner">{friendMessage}</p> : null}
       </section>
     </div>
   );

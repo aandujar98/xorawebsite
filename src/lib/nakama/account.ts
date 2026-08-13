@@ -8,6 +8,8 @@ import {
 } from "@/lib/nakama/client";
 import { withNakamaErrors } from "@/lib/nakama/errors";
 import { AppError } from "@/lib/errors";
+import { getSiteUrl } from "@/lib/env";
+import { hostedAvatarPath, isHostedAvatarUrl } from "@/lib/validation/avatar";
 
 function formatTimestamp(value: string | undefined): string | null {
   if (!value) {
@@ -72,20 +74,28 @@ export async function getCurrentAccount(
   return toPublicAccount(account);
 }
 
+export async function getNakamaUserByUsername(
+  session: Session,
+  username: string,
+  client: NakamaGateway = getNakamaClient(),
+): Promise<NakamaUserSnapshot> {
+  const result = await withNakamaErrors(() =>
+    client.getUsers(session, undefined, [username]),
+  );
+  const user = result.users?.[0];
+  if (!user?.id) {
+    throw new AppError("PROFILE_NOT_FOUND");
+  }
+
+  return user;
+}
+
 export async function getProfileByUsername(
   session: Session,
   username: string,
   client: NakamaGateway = getNakamaClient(),
 ): Promise<PublicProfile> {
-  const result = await withNakamaErrors(() =>
-    client.getUsers(session, undefined, [username]),
-  );
-  const user = result.users?.[0];
-  if (!user) {
-    throw new AppError("PROFILE_NOT_FOUND");
-  }
-
-  return toPublicProfile(user);
+  return toPublicProfile(await getNakamaUserByUsername(session, username, client));
 }
 
 export async function updateCurrentProfile(
@@ -100,12 +110,16 @@ export async function updateCurrentProfile(
 ): Promise<{ account: PublicAccount; session: Session; usernameChanged: boolean }> {
   const current = await getCurrentAccount(session, client);
   const usernameChanged = current.username !== input.username;
+  let avatarUrl = input.avatarUrl;
+  if (usernameChanged && isHostedAvatarUrl(avatarUrl, current.username)) {
+    avatarUrl = `${getSiteUrl()}${hostedAvatarPath(input.username)}?v=${Date.now()}`;
+  }
 
   await withNakamaErrors(() =>
     client.updateAccount(session, {
       display_name: input.displayName,
       username: input.username,
-      avatar_url: input.avatarUrl,
+      avatar_url: avatarUrl,
       location: input.location,
     }),
   );

@@ -10,6 +10,7 @@ describe("protected dashboard route", () => {
     expect(isProtectedPath("/dashboard")).toBe(true);
     expect(isProtectedPath("/profile")).toBe(true);
     expect(isProtectedPath("/security")).toBe(true);
+    expect(isProtectedPath("/friends")).toBe(true);
     expect(isProtectedPath("/u/player_one")).toBe(true);
     expect(isProtectedPath("/login")).toBe(false);
   });

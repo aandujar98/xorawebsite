@@ -11,6 +11,23 @@ function jwt(payload: Record<string, unknown>) {
   return `${header}.${body}.sig`;
 }
 
+function extraClient(): Pick<
+  NakamaGateway,
+  | "listFriends"
+  | "addFriends"
+  | "deleteFriends"
+  | "writeStorageObjects"
+  | "readStorageObjects"
+> {
+  return {
+    listFriends: vi.fn().mockResolvedValue({ friends: [] }),
+    addFriends: vi.fn().mockResolvedValue(true),
+    deleteFriends: vi.fn().mockResolvedValue(true),
+    writeStorageObjects: vi.fn().mockResolvedValue({}),
+    readStorageObjects: vi.fn().mockResolvedValue({ objects: [] }),
+  };
+}
+
 function makeSession(username = "player_one") {
   const now = Math.floor(Date.now() / 1000);
   return new Session(
@@ -73,6 +90,7 @@ describe("account mapping and profile updates", () => {
       getUsers: vi.fn(),
       updateAccount: vi.fn().mockResolvedValue(true),
       deleteAccount: vi.fn(),
+      ...extraClient(),
     };
 
     const result = await updateCurrentProfile(
@@ -104,6 +122,7 @@ describe("account mapping and profile updates", () => {
       getUsers: vi.fn(),
       updateAccount: vi.fn(),
       deleteAccount: vi.fn().mockResolvedValue(true),
+      ...extraClient(),
     };
 
     await deleteCurrentAccount(session, client);
@@ -130,6 +149,7 @@ describe("account mapping and profile updates", () => {
       }),
       updateAccount: vi.fn(),
       deleteAccount: vi.fn(),
+      ...extraClient(),
     };
 
     const profile = await getProfileByUsername(session, "other_player", client);
@@ -149,6 +169,7 @@ describe("account mapping and profile updates", () => {
       getUsers: vi.fn().mockResolvedValue({ users: [] }),
       updateAccount: vi.fn(),
       deleteAccount: vi.fn(),
+      ...extraClient(),
     };
 
     await expect(getProfileByUsername(session, "missing", client)).rejects.toMatchObject({

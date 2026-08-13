@@ -453,6 +453,74 @@ textarea {
   object-fit: cover;
 }
 
+.avatar-upload {
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.file-button {
+  position: relative;
+  overflow: hidden;
+  width: fit-content;
+  margin-top: 0.85rem;
+}
+
+.file-button input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.friend-list,
+.friend-preview {
+  list-style: none;
+  margin-top: 1rem;
+}
+
+.friend-list {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.friend-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.85rem;
+  align-items: center;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.friend-copy {
+  min-width: 0;
+}
+
+.friend-copy a {
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.friend-actions {
+  margin-top: 0;
+}
+
+.friend-preview {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.friend-preview a {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  text-decoration: none;
+}
+
 .details > div {
   display: grid;
   gap: 0.25rem;
@@ -562,6 +630,14 @@ textarea {
     grid-template-columns: 1fr;
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .friend-row {
+    grid-template-columns: auto 1fr;
+  }
+
+  .friend-actions {
+    grid-column: 1 / -1;
   }
 
   .hero h1,

@@ -31,6 +31,9 @@ export async function SiteHeader() {
             <Link className="nav-link" href="/profile" data-nav-item>
               Profile
             </Link>
+            <Link className="nav-link" href="/friends" data-nav-item>
+              Friends
+            </Link>
             <Link className="nav-link" href="/security" data-nav-item>
               Security
             </Link>

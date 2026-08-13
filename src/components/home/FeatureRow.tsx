@@ -1,7 +1,7 @@
 const FEATURES = [
   {
     title: "Friends",
-    description: "Find other XOrA players and keep a friends list across devices.",
+    description: "Find other XOrA players by username and keep a friends list.",
   },
   {
     title: "Messaging",
@@ -35,7 +35,11 @@ export function FeatureRow() {
               <div className="feature-orb" aria-hidden="true" />
               <h3>{feature.title}</h3>
               <p>{feature.description}</p>
-              <span className="badge">Coming Soon</span>
+              {feature.title === "Friends" ? (
+                <span className="badge">Available</span>
+              ) : (
+                <span className="badge">Coming Soon</span>
+              )}
             </article>
           </li>
         ))}

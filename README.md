@@ -63,7 +63,8 @@ npm start
 - `/login` sign in without creating an account
 - `/forgot-password` recovery UI (backend email workflow is not implemented)
 - `/dashboard` protected account home
-- `/profile` edit display name, username, and avatar URL
+- `/profile` edit display name, username, location, and profile photo
+- `/friends` friends list, incoming requests, and add-by-username
 - `/security` connected methods, sign out, delete account, password-change placeholder
 
 Registration calls `authenticateEmail(..., create = true, username)` and rejects the result if Nakama returns an existing account (`session.created === false`). Login calls `authenticateEmail(..., create = false)` so the login form cannot create accounts.

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useAccount } from "@/components/auth/AccountGate";
+import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { ComingSoonCard } from "@/components/profile/ComingSoonCard";
 import { ProfileForm } from "@/components/profile/ProfileForm";
 import { ProfileHero } from "@/components/profile/ProfileHero";
@@ -13,6 +14,11 @@ export function ProfileView() {
   return (
     <div className="stack">
       <ProfileHero profile={account} disabled={account.disabled} />
+
+      <section className="glass">
+        <h2>Profile photo</h2>
+        <AvatarUpload />
+      </section>
 
       <section className="glass">
         <h2>Profile details</h2>
@@ -54,10 +60,6 @@ export function ProfileView() {
       <section aria-labelledby="profile-soon">
         <h2 id="profile-soon">Coming soon</h2>
         <div className="preview-grid">
-          <ComingSoonCard
-            title="Friends"
-            description="People who follow this profile will appear here."
-          />
           <ComingSoonCard
             title="Shared Photos"
             description="XOrA Network sharing is not enabled yet."

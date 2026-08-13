@@ -79,3 +79,12 @@ export function getNakamaServerConfig(): NakamaServerConfig {
 export function isProduction(): boolean {
   return process.env.NODE_ENV === "production";
 }
+
+export function getSiteUrl(): string {
+  const configured = process.env.SITE_URL?.trim();
+  if (configured) {
+    return configured.replace(/\/$/, "");
+  }
+
+  return "https://account.xoranetwork.com";
+}

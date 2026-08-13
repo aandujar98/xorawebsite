@@ -23,6 +23,18 @@ export type PublicAccount = PublicProfile & {
   connectedMethods: ConnectedAuthMethod[];
 };
 
+export type FriendState = "friend" | "incoming" | "outgoing";
+
+export type FriendEntry = PublicProfile & {
+  state: FriendState;
+};
+
+export type FriendsList = {
+  friends: FriendEntry[];
+  incoming: FriendEntry[];
+  outgoing: FriendEntry[];
+};
+
 export type SessionTokens = {
   token: string;
   refreshToken: string;

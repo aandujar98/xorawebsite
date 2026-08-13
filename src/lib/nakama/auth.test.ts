@@ -30,6 +30,11 @@ function mockClient(partial: Partial<NakamaGateway> = {}): NakamaGateway {
     getUsers: vi.fn(),
     updateAccount: vi.fn().mockResolvedValue(true),
     deleteAccount: vi.fn().mockResolvedValue(true),
+    listFriends: vi.fn().mockResolvedValue({ friends: [] }),
+    addFriends: vi.fn().mockResolvedValue(true),
+    deleteFriends: vi.fn().mockResolvedValue(true),
+    writeStorageObjects: vi.fn().mockResolvedValue({}),
+    readStorageObjects: vi.fn().mockResolvedValue({ objects: [] }),
     ...partial,
   };
 }

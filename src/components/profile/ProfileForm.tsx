@@ -11,7 +11,6 @@ export function ProfileForm() {
   const { account, refresh } = useAccount();
   const [displayName, setDisplayName] = useState(account.displayName);
   const [username, setUsername] = useState(account.username);
-  const [avatarUrl, setAvatarUrl] = useState(account.avatarUrl);
   const [location, setLocation] = useState(account.location);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
@@ -21,7 +20,6 @@ export function ProfileForm() {
   function reset() {
     setDisplayName(account.displayName);
     setUsername(account.username);
-    setAvatarUrl(account.avatarUrl);
     setLocation(account.location);
     setFieldErrors({});
     setMessage(null);
@@ -29,7 +27,12 @@ export function ProfileForm() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const validated = validateProfileInput({ displayName, username, avatarUrl, location });
+    const validated = validateProfileInput({
+      displayName,
+      username,
+      avatarUrl: account.avatarUrl,
+      location,
+    });
     if (!validated.values) {
       setFieldErrors(validated.errors);
       setTone("error");
@@ -83,20 +86,6 @@ export function ProfileForm() {
           name="username"
           value={username}
           onChange={(event) => setUsername(event.target.value)}
-        />
-      </Field>
-      <Field
-        id="avatarUrl"
-        label="Avatar URL"
-        error={fieldErrors.avatarUrl}
-        hint="Use an https image URL. Direct uploads are coming later."
-      >
-        <input
-          id="avatarUrl"
-          name="avatarUrl"
-          type="url"
-          value={avatarUrl}
-          onChange={(event) => setAvatarUrl(event.target.value)}
         />
       </Field>
       <Field

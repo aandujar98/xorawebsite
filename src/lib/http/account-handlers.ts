@@ -8,28 +8,10 @@ import {
   getProfileByUsername,
   updateCurrentProfile,
 } from "@/lib/nakama/account";
-import {
-  clearSessionCookies,
-  readSessionTokens,
-  writeSessionCookies,
-} from "@/lib/session/cookies";
-import { restoreAndRefreshSession } from "@/lib/session/restore";
+import { clearSessionCookies, writeSessionCookies } from "@/lib/session/cookies";
+import { requireRestoredSession } from "@/lib/session/require";
 import { validateProfileInput } from "@/lib/validation/auth";
 import { FRIENDLY_ERROR_MESSAGES, type AppErrorCode } from "@/types/api";
-
-async function requireRestoredSession() {
-  const tokens = await readSessionTokens();
-  if (!tokens) {
-    throw new AppError("SESSION_EXPIRED");
-  }
-
-  const restored = await restoreAndRefreshSession(tokens);
-  if (restored.refreshed) {
-    await writeSessionCookies(restored.session);
-  }
-
-  return restored.session;
-}
 
 export async function getAccountHandler(request: Request): Promise<Response> {
   return handleApiRoute(

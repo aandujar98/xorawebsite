@@ -19,6 +19,10 @@ export const APP_ERROR_CODES = [
   "INVALID_LOCATION",
   "DELETE_CONFIRMATION",
   "PASSWORD_RECOVERY_UNAVAILABLE",
+  "INVALID_AVATAR_IMAGE",
+  "AVATAR_TOO_LARGE",
+  "CANNOT_ADD_SELF",
+  "ALREADY_FRIENDS",
   "UNEXPECTED",
 ] as const;
 
@@ -49,6 +53,10 @@ export const FRIENDLY_ERROR_MESSAGES: Record<AppErrorCode, string> = {
   INVALID_LOCATION: "Location must be 64 characters or fewer.",
   DELETE_CONFIRMATION: "Type your username to confirm account deletion.",
   PASSWORD_RECOVERY_UNAVAILABLE: "Password recovery is coming soon.",
+  INVALID_AVATAR_IMAGE: "Choose a JPEG, PNG, WebP, or GIF photo from your device.",
+  AVATAR_TOO_LARGE: "Photos must be 512 KB or smaller.",
+  CANNOT_ADD_SELF: "You cannot add yourself as a friend.",
+  ALREADY_FRIENDS: "You are already friends, or a request is already pending.",
   UNEXPECTED: "Something went wrong. Please try again.",
 };
 

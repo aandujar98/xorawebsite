@@ -105,6 +105,10 @@ export function validateAvatarUrl(value: string): string | null {
     return "INVALID_AVATAR_URL";
   }
 
+  if (avatarUrl.startsWith("/api/avatars/")) {
+    return null;
+  }
+
   try {
     const parsed = new URL(avatarUrl);
     if (parsed.protocol !== "https:") {

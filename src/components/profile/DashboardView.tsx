@@ -3,14 +3,11 @@
 import Link from "next/link";
 import { useAccount } from "@/components/auth/AccountGate";
 import { Avatar } from "@/components/profile/Avatar";
+import { FriendsPreview } from "@/components/friends/FriendsPreview";
 import { ComingSoonCard } from "@/components/profile/ComingSoonCard";
 import { SignOutButton } from "@/components/auth/SignOutButton";
 
 const PREVIEWS = [
-  {
-    title: "Friends",
-    description: "Friends lists will appear here when social features launch.",
-  },
   {
     title: "Messages",
     description: "Inbox and conversations are not available yet.",
@@ -107,6 +104,8 @@ export function DashboardView() {
           <SignOutButton />
         </div>
       </section>
+
+      <FriendsPreview />
 
       <section aria-labelledby="coming-soon-heading">
         <h2 id="coming-soon-heading">Coming soon</h2>

@@ -47,7 +47,11 @@ export async function apiRequest<T>(
 
   if (method !== "GET" && method !== "HEAD") {
     headers.set(CSRF_HEADER, readCookie(CSRF_COOKIE));
-    if (!headers.has("Content-Type") && init.body) {
+    if (
+      !headers.has("Content-Type") &&
+      init.body &&
+      !(init.body instanceof FormData)
+    ) {
       headers.set("Content-Type", "application/json");
     }
   }

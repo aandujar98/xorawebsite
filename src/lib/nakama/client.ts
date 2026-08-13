@@ -27,6 +27,26 @@ export type NakamaAccountUpdate = {
   location?: string;
 };
 
+export type NakamaFriendSnapshot = {
+  state?: number;
+  user?: NakamaUserSnapshot;
+};
+
+export type NakamaStorageObject = {
+  collection?: string;
+  key?: string;
+  user_id?: string;
+  value?: unknown;
+};
+
+export type NakamaStorageWrite = {
+  collection?: string;
+  key?: string;
+  value?: object;
+  permission_read?: number;
+  permission_write?: number;
+};
+
 export type NakamaGateway = {
   authenticateEmail: (
     email: string,
@@ -51,6 +71,32 @@ export type NakamaGateway = {
     request: NakamaAccountUpdate,
   ) => Promise<boolean>;
   deleteAccount: (session: Session) => Promise<boolean>;
+  listFriends: (
+    session: Session,
+    state?: number,
+    limit?: number,
+    cursor?: string,
+  ) => Promise<{ friends?: NakamaFriendSnapshot[] }>;
+  addFriends: (
+    session: Session,
+    ids?: string[],
+    usernames?: string[],
+  ) => Promise<boolean>;
+  deleteFriends: (
+    session: Session,
+    ids?: string[],
+    usernames?: string[],
+  ) => Promise<boolean>;
+  writeStorageObjects: (
+    session: Session,
+    objects: NakamaStorageWrite[],
+  ) => Promise<unknown>;
+  readStorageObjects: (
+    session: Session,
+    request: {
+      object_ids?: Array<{ collection?: string; key?: string; user_id?: string }>;
+    },
+  ) => Promise<{ objects?: NakamaStorageObject[] }>;
 };
 
 let cachedClient: Client | null = null;
