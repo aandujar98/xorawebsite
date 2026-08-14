@@ -1,6 +1,11 @@
 import type { Session } from "@heroiclabs/nakama-js";
 import { getSiteUrl } from "@/lib/env";
 import { AppError } from "@/lib/errors";
+import {
+  deleteAvatarFile,
+  readAvatarFile,
+  writeAvatarFile,
+} from "@/lib/avatars/store";
 import { getCurrentAccount, getNakamaUserByUsername } from "@/lib/nakama/account";
 import {
   getNakamaClient,
@@ -8,8 +13,6 @@ import {
 } from "@/lib/nakama/client";
 import { withNakamaErrors } from "@/lib/nakama/errors";
 import {
-  AVATAR_COLLECTION,
-  AVATAR_KEY,
   MAX_AVATAR_BYTES,
   hostedAvatarPath,
   sniffImageMime,
@@ -29,26 +32,18 @@ export async function uploadCurrentAvatar(
     throw new AppError("AVATAR_TOO_LARGE");
   }
 
+  const userId = session.user_id?.trim();
+  if (!userId) {
+    throw new AppError("SESSION_EXPIRED");
+  }
+
   const bytes = new Uint8Array(await file.arrayBuffer());
   const mime = sniffImageMime(bytes, file.type);
   if (!mime) {
     throw new AppError("INVALID_AVATAR_IMAGE");
   }
 
-  await withNakamaErrors(() =>
-    client.writeStorageObjects(session, [
-      {
-        collection: AVATAR_COLLECTION,
-        key: AVATAR_KEY,
-        value: {
-          mime,
-          data: Buffer.from(bytes).toString("base64"),
-        },
-        permission_read: 2,
-        permission_write: 1,
-      },
-    ]),
-  );
+  await writeAvatarFile(userId, mime, bytes);
 
   const account = await getCurrentAccount(session, client);
   const avatarUrl = `${getSiteUrl()}${hostedAvatarPath(account.username)}?v=${Date.now()}`;
@@ -65,30 +60,18 @@ export async function readAvatarByUsername(
   client: NakamaGateway = getNakamaClient(),
 ): Promise<StoredAvatar> {
   const user = await getNakamaUserByUsername(session, username, client);
-  const stored = await withNakamaErrors(() =>
-    client.readStorageObjects(session, {
-      object_ids: [
-        {
-          collection: AVATAR_COLLECTION,
-          key: AVATAR_KEY,
-          user_id: user.id,
-        },
-      ],
-    }),
-  );
-
-  const value = stored.objects?.[0]?.value;
-  if (!value || typeof value !== "object") {
+  if (!user.id) {
     throw new AppError("PROFILE_NOT_FOUND");
   }
 
-  const record = value as { mime?: unknown; data?: unknown };
-  if (typeof record.mime !== "string" || typeof record.data !== "string") {
-    throw new AppError("PROFILE_NOT_FOUND");
+  return readAvatarFile(user.id);
+}
+
+export async function deleteCurrentAvatar(session: Session): Promise<void> {
+  const userId = session.user_id?.trim();
+  if (!userId) {
+    return;
   }
 
-  return {
-    mime: record.mime,
-    bytes: Buffer.from(record.data, "base64"),
-  };
+  await deleteAvatarFile(userId);
 }

@@ -11,12 +11,17 @@ export async function uploadAvatarHandler(request: Request): Promise<Response> {
     async () => {
       const form = await request.formData();
       const photo = form.get("photo");
-      if (!(photo instanceof File)) {
+      if (
+        !photo ||
+        typeof photo !== "object" ||
+        !("arrayBuffer" in photo) ||
+        !("size" in photo)
+      ) {
         throw new AppError("INVALID_AVATAR_IMAGE");
       }
 
       const session = await requireRestoredSession();
-      const account = await uploadCurrentAvatar(session, photo);
+      const account = await uploadCurrentAvatar(session, photo as File);
       return jsonOk({ account });
     },
     { rateLimit: ACCOUNT_MUTATION_RATE_LIMIT, rateLimitKey: "avatar-upload" },

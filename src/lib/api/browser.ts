@@ -58,7 +58,9 @@ export async function apiRequest<T>(
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), RECOVERY_FETCH_TIMEOUT_MS);
+  const timeoutMs =
+    init.body instanceof FormData ? 60_000 : RECOVERY_FETCH_TIMEOUT_MS;
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const onAbort = () => controller.abort();
   init.signal?.addEventListener("abort", onAbort);
 

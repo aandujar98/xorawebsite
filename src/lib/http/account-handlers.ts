@@ -8,6 +8,7 @@ import {
   getProfileByUsername,
   updateCurrentProfile,
 } from "@/lib/nakama/account";
+import { deleteCurrentAvatar } from "@/lib/nakama/avatar";
 import { migrateMessageInbox } from "@/lib/nakama/messages";
 import { migrateNotificationInbox } from "@/lib/nakama/notifications";
 import { clearSessionCookies, writeSessionCookies } from "@/lib/session/cookies";
@@ -90,6 +91,7 @@ export async function deleteAccountHandler(request: Request): Promise<Response> 
         throw new AppError("DELETE_CONFIRMATION");
       }
 
+      await deleteCurrentAvatar(session);
       await deleteCurrentAccount(session);
       await clearSessionCookies();
       return jsonOk({ deleted: true });
