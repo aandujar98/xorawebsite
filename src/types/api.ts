@@ -59,7 +59,7 @@ export const FRIENDLY_ERROR_MESSAGES: Record<AppErrorCode, string> = {
   PASSWORD_RECOVERY_UNAVAILABLE:
     "Password recovery is not configured on this server yet.",
   INVALID_AVATAR_IMAGE: "Choose a JPEG, PNG, WebP, or GIF photo from your device.",
-  AVATAR_TOO_LARGE: "Photos must be 1 MB or smaller. Try a still JPEG or PNG if the GIF is large.",
+  AVATAR_TOO_LARGE: "Photos must be 8 MB or smaller.",
   CANNOT_ADD_SELF: "You cannot add yourself as a friend.",
   ALREADY_FRIENDS: "You are already friends, or a request is already pending.",
   NOT_FRIENDS: "You can only message people on your friends list.",

@@ -1,4 +1,5 @@
-export const MAX_AVATAR_BYTES = 1024 * 1024;
+export const MAX_AVATAR_MB = 8;
+export const MAX_AVATAR_BYTES = MAX_AVATAR_MB * 1024 * 1024;
 export const AVATAR_COLLECTION = "xora_avatars";
 export const AVATAR_KEY = "profile";
 

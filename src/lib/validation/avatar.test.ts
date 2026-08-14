@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { sniffImageMime } from "@/lib/validation/avatar";
+import { MAX_AVATAR_BYTES, MAX_AVATAR_MB, sniffImageMime } from "@/lib/validation/avatar";
 import { validateAvatarUrl } from "@/lib/validation/auth";
 
 describe("avatar uploads", () => {
+  it("allows GIF-sized profile photos", () => {
+    expect(MAX_AVATAR_MB).toBe(8);
+    expect(MAX_AVATAR_BYTES).toBe(8 * 1024 * 1024);
+  });
   it("accepts JPEG, PNG, GIF, and WebP magic bytes", () => {
     expect(sniffImageMime(Uint8Array.from([0xff, 0xd8, 0xff, 0x00]))).toBe("image/jpeg");
     expect(sniffImageMime(Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))).toBe(

@@ -5,7 +5,7 @@ import { useAccount } from "@/components/auth/AccountGate";
 import { Avatar } from "@/components/profile/Avatar";
 import { AuthMessage } from "@/components/auth/Field";
 import { apiRequest, ApiClientError } from "@/lib/api/browser";
-import { MAX_AVATAR_BYTES } from "@/lib/validation/avatar";
+import { MAX_AVATAR_BYTES, MAX_AVATAR_MB } from "@/lib/validation/avatar";
 import { FRIENDLY_ERROR_MESSAGES } from "@/types/api";
 import type { PublicAccount } from "@/types/account";
 
@@ -68,7 +68,7 @@ export function AvatarUpload() {
       <div>
         <p className="eyebrow">Profile photo</p>
         <h3>Upload from this device</h3>
-        <p className="muted">JPEG, PNG, WebP, or GIF. 1 MB or smaller.</p>
+        <p className="muted">JPEG, PNG, WebP, or GIF. {MAX_AVATAR_MB} MB or smaller.</p>
         <label className="button button-light file-button">
           {pending ? "Uploading..." : "Choose photo"}
           <input
