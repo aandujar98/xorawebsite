@@ -17,11 +17,7 @@ export async function SiteHeader() {
         Skip to content
       </a>
       <Link className="brand" href={signedIn ? "/dashboard" : "/"}>
-        <XoraMark size={40} />
-        <span className="brand-text">
-          <span className="brand-name">XOrA</span>
-          <span className="brand-sub">Network</span>
-        </span>
+        <XoraMark size={52} />
       </Link>
       <nav className="site-nav" aria-label="Primary">
         {signedIn ? (

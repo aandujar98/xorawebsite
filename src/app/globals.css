@@ -105,28 +105,13 @@ textarea {
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
   text-decoration: none;
 }
 
-.brand-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.05;
-}
-
-.brand-name {
-  font-family: var(--font-display), sans-serif;
-  font-size: 1.35rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
-.brand-sub {
-  font-size: 0.78rem;
-  letter-spacing: 0.28em;
-  text-transform: uppercase;
-  opacity: 0.8;
+.brand-logo {
+  display: block;
+  border-radius: 0.7rem;
+  object-fit: contain;
 }
 
 .site-nav {
