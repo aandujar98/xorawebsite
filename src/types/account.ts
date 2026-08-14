@@ -46,3 +46,46 @@ export type ProfileUpdateInput = {
   avatarUrl: string;
   location: string;
 };
+
+export type NotificationType = "friend_request" | "message";
+
+export type AccountNotification = {
+  id: string;
+  type: NotificationType;
+  fromUsername: string;
+  fromDisplayName: string;
+  body: string;
+  href: string;
+  createdAt: string;
+  read: boolean;
+};
+
+export type NotificationList = {
+  items: AccountNotification[];
+  unreadCount: number;
+};
+
+export type DirectMessage = {
+  id: string;
+  fromUsername: string;
+  body: string;
+  createdAt: string;
+};
+
+export type MessageThreadSummary = {
+  username: string;
+  displayName: string;
+  lastBody: string;
+  lastAt: string;
+  unread: number;
+};
+
+export type MessageThread = {
+  username: string;
+  displayName: string;
+  messages: DirectMessage[];
+};
+
+export type MessageInbox = {
+  threads: MessageThreadSummary[];
+};

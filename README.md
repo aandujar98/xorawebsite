@@ -34,6 +34,8 @@ NEXT_PUBLIC_NAKAMA_HOST=api.xoranetwork.com
 NEXT_PUBLIC_NAKAMA_PORT=443
 NEXT_PUBLIC_NAKAMA_SSL=true
 NAKAMA_SERVER_KEY=your_nakama_server_key
+NAKAMA_HTTP_KEY=your_nakama_runtime_http_key
+XORA_RECOVERY_SECRET=your_recovery_secret_not_the_server_key
 ```
 
 4. Install and run:
@@ -61,11 +63,11 @@ npm start
 - `/` introduction and feature previews
 - `/register` create an account
 - `/login` sign in without creating an account
-- `/forgot-password` recovery UI (backend email workflow is not implemented)
+- `/forgot-password` request a password reset email
 - `/dashboard` protected account home
 - `/profile` edit display name, username, location, and profile photo
 - `/friends` friends list, incoming requests, and add-by-username
-- `/security` connected methods, sign out, delete account, password-change placeholder
+- `/security` connected methods, change password, sign out, delete account
 
 Registration calls `authenticateEmail(..., create = true, username)` and rejects the result if Nakama returns an existing account (`session.created === false`). Login calls `authenticateEmail(..., create = false)` so the login form cannot create accounts.
 
@@ -92,6 +94,9 @@ grep '^SERVER_KEY=' ~/xora-nakama/.env
 # put that value into .env as NAKAMA_SERVER_KEY, for example:
 # NAKAMA_SERVER_KEY=the_same_client_key_nakama_uses
 printf 'NAKAMA_SERVER_KEY=%s\n' "$(grep '^SERVER_KEY=' ~/xora-nakama/.env | cut -d= -f2-)" > .env
+# then add these to .env as well:
+# EMAIL_FROM=XOrA Network <noreply@xoranetwork.com>
+# RESEND_API_KEY=your_resend_api_key
 docker compose up -d --build
 ```
 
@@ -109,9 +114,17 @@ Required production environment variables:
 - `NEXT_PUBLIC_NAKAMA_PORT`
 - `NEXT_PUBLIC_NAKAMA_SSL`
 - `NAKAMA_SERVER_KEY`
+- `NAKAMA_HTTP_KEY`
+- `XORA_RECOVERY_SECRET`
+- `EMAIL_FROM=XOrA Network <noreply@xoranetwork.com>`
+- `RESEND_API_KEY`
+
+`XORA_RECOVERY_SECRET` must also be present in Nakama `runtime.env` and must not equal `SERVER_KEY`. `NAKAMA_HTTP_KEY` must match Nakama `runtime.http_key` when that key is set. Copy the updated `nakama/modules/xora_recovery.lua` over the module Nakama already loads.
 
 Production cookies are marked `Secure` automatically when `NODE_ENV=production`. TLS certificate verification stays enabled; do not disable it.
 
 In-memory rate limiting is a first layer for a single Node process. Use an external store such as Redis before running multiple instances.
 
-Friends, messaging, netplay invites, cloud saves, sharing, and device linking are preview-only. Password recovery and website password changes are labeled coming soon until an email workflow exists. Email ownership is not claimed as verified.
+Friends, messaging, netplay invites, cloud saves, sharing, and device linking are preview-only. Password recovery sends mail through Resend from `noreply@xoranetwork.com` after that domain is verified. Email ownership is not claimed as verified.
+
+To reset passwords for every Nakama email account (including launcher accounts that have never used the website), copy `nakama/modules/xora_recovery.lua` into the Nakama modules folder, set `runtime.env` `SERVER_KEY` to the same client server key, and restart Nakama.

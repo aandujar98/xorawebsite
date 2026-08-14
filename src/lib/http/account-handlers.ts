@@ -8,6 +8,8 @@ import {
   getProfileByUsername,
   updateCurrentProfile,
 } from "@/lib/nakama/account";
+import { migrateMessageInbox } from "@/lib/nakama/messages";
+import { migrateNotificationInbox } from "@/lib/nakama/notifications";
 import { clearSessionCookies, writeSessionCookies } from "@/lib/session/cookies";
 import { requireRestoredSession } from "@/lib/session/require";
 import { validateProfileInput } from "@/lib/validation/auth";
@@ -57,6 +59,17 @@ export async function updateAccountHandler(request: Request): Promise<Response> 
 
       const session = await requireRestoredSession();
       const updated = await updateCurrentProfile(session, validated.values);
+      if (updated.usernameChanged) {
+        try {
+          await migrateNotificationInbox(
+            updated.previousUsername,
+            updated.account.username,
+          );
+          await migrateMessageInbox(updated.previousUsername, updated.account.username);
+        } catch {
+          // Profile update succeeded; inbox keys catch up on the next write.
+        }
+      }
       await writeSessionCookies(updated.session);
       return jsonOk({ account: updated.account });
     },

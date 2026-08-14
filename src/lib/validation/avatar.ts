@@ -1,8 +1,17 @@
-export const MAX_AVATAR_BYTES = 512 * 1024;
+export const MAX_AVATAR_BYTES = 1024 * 1024;
 export const AVATAR_COLLECTION = "xora_avatars";
 export const AVATAR_KEY = "profile";
 
-export function sniffImageMime(bytes: Uint8Array): string | null {
+const DECLARED_IMAGE_TYPES: Record<string, string> = {
+  "image/jpeg": "image/jpeg",
+  "image/jpg": "image/jpeg",
+  "image/pjpeg": "image/jpeg",
+  "image/png": "image/png",
+  "image/gif": "image/gif",
+  "image/webp": "image/webp",
+};
+
+export function sniffImageMime(bytes: Uint8Array, declaredType = ""): string | null {
   if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
     return "image/jpeg";
   }
@@ -18,11 +27,10 @@ export function sniffImageMime(bytes: Uint8Array): string | null {
   }
 
   if (
-    bytes.length >= 6 &&
+    bytes.length >= 3 &&
     bytes[0] === 0x47 &&
     bytes[1] === 0x49 &&
-    bytes[2] === 0x46 &&
-    bytes[3] === 0x38
+    bytes[2] === 0x46
   ) {
     return "image/gif";
   }
@@ -41,7 +49,8 @@ export function sniffImageMime(bytes: Uint8Array): string | null {
     return "image/webp";
   }
 
-  return null;
+  const declared = DECLARED_IMAGE_TYPES[declaredType.toLowerCase().split(";")[0]?.trim() ?? ""];
+  return declared ?? null;
 }
 
 export function hostedAvatarPath(username: string): string {
@@ -49,6 +58,8 @@ export function hostedAvatarPath(username: string): string {
 }
 
 export function isHostedAvatarUrl(url: string, username: string): boolean {
-  return url.includes(`/api/avatars/${encodeURIComponent(username)}`) ||
-    url.includes(`/api/avatars/${username}`);
+  return (
+    url.includes(`/api/avatars/${encodeURIComponent(username)}`) ||
+    url.includes(`/api/avatars/${username}`)
+  );
 }

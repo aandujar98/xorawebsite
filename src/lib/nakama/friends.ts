@@ -1,9 +1,10 @@
 import type { Session } from "@heroiclabs/nakama-js";
 import type { FriendEntry, FriendState, FriendsList } from "@/types/account";
 import { AppError } from "@/lib/errors";
-import { getCurrentAccount, toPublicProfile } from "@/lib/nakama/account";
+import { getCurrentAccount, getNakamaUserByUsername, toPublicProfile } from "@/lib/nakama/account";
 import { getNakamaClient, type NakamaGateway } from "@/lib/nakama/client";
 import { withNakamaErrors } from "@/lib/nakama/errors";
+import { pushNotification } from "@/lib/nakama/notifications";
 import { validateUsername } from "@/lib/validation/auth";
 
 const FRIEND = 0;
@@ -62,15 +63,16 @@ export async function addFriendByUsername(
   }
 
   const current = await getCurrentAccount(session, client);
-  if (current.username.toLowerCase() === username.trim().toLowerCase()) {
+  const typed = username.trim();
+  if (current.username.toLowerCase() === typed.toLowerCase()) {
     throw new AppError("CANNOT_ADD_SELF");
   }
 
+  const target = await getNakamaUserByUsername(session, typed, client);
+  const canonical = target.username?.trim() ?? typed;
+
   const existing = await listCurrentFriends(session, client);
-  const normalized = username.trim().toLowerCase();
-  const incoming = existing.incoming.some(
-    (entry) => entry.username.toLowerCase() === normalized,
-  );
+  const normalized = canonical.toLowerCase();
   const alreadyLinked = [...existing.friends, ...existing.outgoing].some(
     (entry) => entry.username.toLowerCase() === normalized,
   );
@@ -78,16 +80,22 @@ export async function addFriendByUsername(
     throw new AppError("ALREADY_FRIENDS");
   }
 
-  if (!incoming) {
-    const users = await withNakamaErrors(() =>
-      client.getUsers(session, undefined, [username.trim()]),
+  await withNakamaErrors(() => client.addFriends(session, undefined, [canonical]));
+  try {
+    await pushNotification(
+      canonical,
+      {
+        type: "friend_request",
+        fromUsername: current.username,
+        fromDisplayName: current.displayName,
+        body: `${current.displayName} added you as a friend.`,
+        href: "/friends",
+      },
+      client,
     );
-    if (!users.users?.[0]) {
-      throw new AppError("PROFILE_NOT_FOUND");
-    }
+  } catch {
+    // The friend request is stored in Nakama even if the inbox write fails.
   }
-
-  await withNakamaErrors(() => client.addFriends(session, undefined, [username.trim()]));
   return listCurrentFriends(session, client);
 }
 
@@ -101,6 +109,8 @@ export async function removeFriendByUsername(
     throw new AppError("INVALID_USERNAME");
   }
 
-  await withNakamaErrors(() => client.deleteFriends(session, undefined, [username.trim()]));
+  const target = await getNakamaUserByUsername(session, username, client);
+  const canonical = target.username?.trim() ?? username.trim();
+  await withNakamaErrors(() => client.deleteFriends(session, undefined, [canonical]));
   return listCurrentFriends(session, client);
 }

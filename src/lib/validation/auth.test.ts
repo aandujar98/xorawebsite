@@ -3,6 +3,7 @@ import {
   validateLoginInput,
   validatePassword,
   validateRegisterInput,
+  validateResetPasswordInput,
   validateUsername,
 } from "@/lib/validation/auth";
 
@@ -63,6 +64,45 @@ describe("login validation", () => {
       password: "Correct1",
       rememberMe: true,
     });
-    expect(result.values?.email).toBe("player@xoranetwork.com");
+    expect(result.values?.identifier).toBe("player@xoranetwork.com");
+  });
+
+  it("accepts a username identifier", () => {
+    const result = validateLoginInput({
+      identifier: "Player_One",
+      password: "Correct1",
+      rememberMe: true,
+    });
+    expect(result.values?.identifier).toBe("Player_One");
+  });
+
+  it("rejects an empty identifier", () => {
+    const result = validateLoginInput({
+      identifier: "  ",
+      password: "Correct1",
+      rememberMe: false,
+    });
+    expect(result.errors.identifier).toBe("INVALID_CREDENTIALS");
+  });
+});
+
+describe("reset password validation", () => {
+  it("rejects mismatched passwords", () => {
+    const result = validateResetPasswordInput({
+      token: "reset-token",
+      password: "NewPass1",
+      confirmPassword: "OtherPass1",
+    });
+    expect(result.errors.confirmPassword).toBe("PASSWORD_MISMATCH");
+    expect(result.values).toBeUndefined();
+  });
+
+  it("rejects a missing token", () => {
+    const result = validateResetPasswordInput({
+      token: "  ",
+      password: "NewPass1",
+      confirmPassword: "NewPass1",
+    });
+    expect(result.errors.token).toBe("INVALID_RESET_TOKEN");
   });
 });

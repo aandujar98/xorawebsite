@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { XoraMark } from "@/components/brand/XoraMark";
 import { SignOutButton } from "@/components/auth/SignOutButton";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { ACCESS_COOKIE, REFRESH_COOKIE } from "@/lib/session/constants";
 
 export async function SiteHeader() {
@@ -34,6 +35,10 @@ export async function SiteHeader() {
             <Link className="nav-link" href="/friends" data-nav-item>
               Friends
             </Link>
+            <Link className="nav-link" href="/messages" data-nav-item>
+              Messages
+            </Link>
+            <NotificationBell />
             <Link className="nav-link" href="/security" data-nav-item>
               Security
             </Link>

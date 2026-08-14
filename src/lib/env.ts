@@ -7,7 +7,11 @@ export type NakamaPublicConfig = {
 export type NakamaServerConfig = NakamaPublicConfig & {
   serverKey: string;
   timeoutMs: number;
+  httpKey: string | null;
 };
+
+const INSECURE_HTTP_KEYS = new Set(["defaulthttpkey", "defaultkey"]);
+const NAKAMA_CLIENT_TIMEOUT_MS = 15_000;
 
 function readRequired(name: string, value: string | undefined): string {
   const trimmed = value?.trim();
@@ -72,8 +76,67 @@ export function getNakamaServerConfig(): NakamaServerConfig {
   return {
     ...publicConfig,
     serverKey,
-    timeoutMs: 15000,
+    timeoutMs: NAKAMA_CLIENT_TIMEOUT_MS,
+    httpKey: getNakamaHttpKey(),
   };
+}
+
+export function getNakamaHttpKey(): string | null {
+  const httpKey = process.env.NAKAMA_HTTP_KEY?.trim() || null;
+  if (!httpKey) {
+    return null;
+  }
+
+  if (INSECURE_HTTP_KEYS.has(httpKey.toLowerCase())) {
+    throw new Error(
+      "NAKAMA_HTTP_KEY is a published default. Set runtime.http_key to a unique value and copy it into NAKAMA_HTTP_KEY.",
+    );
+  }
+
+  return httpKey;
+}
+
+export function getRecoverySecret(): string {
+  const secret = readRequired(
+    "XORA_RECOVERY_SECRET",
+    process.env.XORA_RECOVERY_SECRET,
+  );
+  const serverKey = process.env.NAKAMA_SERVER_KEY?.trim() ?? "";
+
+  if (secret === serverKey) {
+    throw new Error(
+      "XORA_RECOVERY_SECRET must not equal NAKAMA_SERVER_KEY. SERVER_KEY is not administrator authentication.",
+    );
+  }
+
+  return secret;
+}
+
+export function assertNakamaClientEndpoint(
+  config: NakamaPublicConfig = getNakamaPublicConfig(),
+): void {
+  if (config.host !== "api.xoranetwork.com") {
+    return;
+  }
+
+  if (config.port !== "443" || !config.ssl) {
+    throw new Error(
+      "api.xoranetwork.com requires NEXT_PUBLIC_NAKAMA_PORT=443 and NEXT_PUBLIC_NAKAMA_SSL=true.",
+    );
+  }
+}
+
+export function assertRecoveryRuntimeConfig(): void {
+  const config = getNakamaServerConfig();
+  assertNakamaClientEndpoint(config);
+  getRecoverySecret();
+  getNakamaHttpKey();
+
+  if (getMailConfig() === null) {
+    throw new Error(
+      "Password recovery requires EMAIL_FROM and RESEND_API_KEY or SMTP_HOST.",
+    );
+  }
 }
 
 export function isProduction(): boolean {
@@ -87,4 +150,48 @@ export function getSiteUrl(): string {
   }
 
   return "https://account.xoranetwork.com";
+}
+
+export type MailConfig = {
+  from: string;
+  resendApiKey?: string;
+  smtpHost?: string;
+  smtpPort: number;
+  smtpUser?: string;
+  smtpPassword?: string;
+  testRecipient?: string;
+};
+
+export function getMailFromAddress(): string {
+  return (process.env.EMAIL_FROM ?? process.env.MAIL_FROM ?? "").trim();
+}
+
+export function getMailConfig(): MailConfig | null {
+  const from = getMailFromAddress();
+  if (!from) {
+    return null;
+  }
+
+  const resendApiKey = process.env.RESEND_API_KEY?.trim();
+  const smtpHost = process.env.SMTP_HOST?.trim();
+  if (!resendApiKey && !smtpHost) {
+    return null;
+  }
+
+  const smtpPortRaw = process.env.SMTP_PORT?.trim() || "587";
+  const smtpPort = /^\d+$/.test(smtpPortRaw) ? Number(smtpPortRaw) : 587;
+
+  return {
+    from,
+    resendApiKey: resendApiKey || undefined,
+    smtpHost: smtpHost || undefined,
+    smtpPort,
+    smtpUser: process.env.SMTP_USER?.trim() || undefined,
+    smtpPassword: process.env.SMTP_PASSWORD?.trim() || undefined,
+    testRecipient: process.env.EMAIL_TEST_TO?.trim().toLowerCase() || undefined,
+  };
+}
+
+export function getMailTestRecipient(): string | null {
+  return getMailConfig()?.testRecipient ?? null;
 }

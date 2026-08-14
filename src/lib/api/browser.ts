@@ -5,6 +5,7 @@ import {
   type AppErrorCode,
 } from "@/types/api";
 import { CSRF_COOKIE, CSRF_HEADER } from "@/lib/session/constants";
+import { RECOVERY_FETCH_TIMEOUT_MS } from "@/lib/recovery-message";
 
 function readCookie(name: string): string {
   if (typeof document === "undefined") {
@@ -56,6 +57,11 @@ export async function apiRequest<T>(
     }
   }
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), RECOVERY_FETCH_TIMEOUT_MS);
+  const onAbort = () => controller.abort();
+  init.signal?.addEventListener("abort", onAbort);
+
   let response: Response;
   try {
     response = await fetch(path, {
@@ -63,9 +69,19 @@ export async function apiRequest<T>(
       method,
       headers,
       credentials: "same-origin",
+      signal: controller.signal,
     });
-  } catch {
+  } catch (error) {
+    if (
+      (error instanceof DOMException && error.name === "AbortError") ||
+      (error instanceof Error && error.name === "AbortError")
+    ) {
+      throw new ApiClientError("NETWORK_TIMEOUT");
+    }
     throw new ApiClientError("SERVER_UNAVAILABLE");
+  } finally {
+    clearTimeout(timeout);
+    init.signal?.removeEventListener("abort", onAbort);
   }
 
   const body = await parseBody(response);
@@ -78,6 +94,15 @@ export async function apiRequest<T>(
     );
   }
 
+  if (!body || typeof body !== "object") {
+    throw new ApiClientError("UNEXPECTED");
+  }
+
   const success = body as ApiSuccessBody<T>;
+  if (success.ok !== true) {
+    throw new ApiClientError("UNEXPECTED");
+  }
+
   return success.data;
 }
+

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AppError } from "@/lib/errors";
 import { loginWithEmail, registerWithEmail, signOutSession } from "@/lib/nakama/auth";
 import type { NakamaGateway } from "@/lib/nakama/client";
+import { resetUsernameIndexForTests } from "@/lib/nakama/username-index";
 
 function jwt(payload: Record<string, unknown>) {
   const header = Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })).toString(
@@ -24,6 +25,7 @@ function makeSession(created = false, username = "player_one") {
 function mockClient(partial: Partial<NakamaGateway> = {}): NakamaGateway {
   return {
     authenticateEmail: vi.fn(),
+    authenticateCustom: vi.fn().mockResolvedValue(makeSession(true, "xora_lookup")),
     sessionRefresh: vi.fn(),
     sessionLogout: vi.fn().mockResolvedValue(true),
     getAccount: vi.fn(),
@@ -35,6 +37,12 @@ function mockClient(partial: Partial<NakamaGateway> = {}): NakamaGateway {
     deleteFriends: vi.fn().mockResolvedValue(true),
     writeStorageObjects: vi.fn().mockResolvedValue({}),
     readStorageObjects: vi.fn().mockResolvedValue({ objects: [] }),
+    deleteStorageObjects: vi.fn().mockResolvedValue(true),
+    linkCustom: vi.fn().mockResolvedValue(true),
+    linkEmail: vi.fn().mockResolvedValue(true),
+    listStorageObjects: vi.fn().mockResolvedValue({ objects: [] }),
+    rpc: vi.fn(),
+    rpcHttpKey: vi.fn(),
     ...partial,
   };
 }
@@ -49,6 +57,7 @@ const registerInput = {
 describe("authentication", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    resetUsernameIndexForTests();
   });
 
   it("registers with account creation explicitly enabled", async () => {
@@ -91,7 +100,7 @@ describe("authentication", () => {
 
     const result = await loginWithEmail(
       {
-        email: registerInput.email,
+        identifier: registerInput.email,
         password: registerInput.password,
         rememberMe: true,
       },
@@ -103,7 +112,54 @@ describe("authentication", () => {
       registerInput.password,
       false,
     );
+    expect(client.authenticateCustom).not.toHaveBeenCalled();
     expect(result).toBe(session);
+  });
+
+  it("logs in with a username by resolving it to email", async () => {
+    const session = makeSession(false);
+    const client = mockClient({
+      authenticateEmail: vi.fn().mockResolvedValue(session),
+      readStorageObjects: vi.fn().mockResolvedValue({
+        objects: [{ value: { email: registerInput.email } }],
+      }),
+    });
+
+    const result = await loginWithEmail(
+      {
+        identifier: "Player_One",
+        password: registerInput.password,
+        rememberMe: true,
+      },
+      client,
+    );
+
+    expect(client.readStorageObjects).toHaveBeenCalled();
+    expect(client.authenticateEmail).toHaveBeenCalledWith(
+      registerInput.email,
+      registerInput.password,
+      false,
+    );
+    expect(result).toBe(session);
+  });
+
+  it("does not reveal whether an unknown username exists", async () => {
+    const client = mockClient({
+      authenticateEmail: vi.fn(),
+      readStorageObjects: vi.fn().mockResolvedValue({ objects: [] }),
+    });
+
+    await expect(
+      loginWithEmail(
+        {
+          identifier: "missing_user",
+          password: registerInput.password,
+          rememberMe: false,
+        },
+        client,
+      ),
+    ).rejects.toMatchObject({ code: "INVALID_CREDENTIALS" });
+    expect(client.authenticateEmail).not.toHaveBeenCalled();
   });
 
   it("maps invalid credentials to a friendly error", async () => {
@@ -118,7 +174,7 @@ describe("authentication", () => {
     await expect(
       loginWithEmail(
         {
-          email: registerInput.email,
+          identifier: registerInput.email,
           password: "WrongPass1",
           rememberMe: false,
         },
@@ -129,7 +185,7 @@ describe("authentication", () => {
     await expect(
       loginWithEmail(
         {
-          email: registerInput.email,
+          identifier: registerInput.email,
           password: "WrongPass1",
           rememberMe: false,
         },

@@ -9,10 +9,6 @@ import { SignOutButton } from "@/components/auth/SignOutButton";
 
 const PREVIEWS = [
   {
-    title: "Messages",
-    description: "Inbox and conversations are not available yet.",
-  },
-  {
     title: "Netplay Invites",
     description: "Invites into XOrA Libretro sessions will show up here.",
   },
@@ -106,6 +102,22 @@ export function DashboardView() {
       </section>
 
       <FriendsPreview />
+
+      <section className="glass">
+        <h2>Messages</h2>
+        <p className="muted">
+          Send a direct message to someone on your friends list. New messages also
+          appear in your notification center.
+        </p>
+        <div className="button-row">
+          <Link className="button button-primary" href="/messages" data-nav-item>
+            Open messages
+          </Link>
+          <Link className="button button-ghost" href="/notifications" data-nav-item>
+            Notifications
+          </Link>
+        </div>
+      </section>
 
       <section aria-labelledby="coming-soon-heading">
         <h2 id="coming-soon-heading">Coming soon</h2>

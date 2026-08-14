@@ -23,6 +23,7 @@ function makeSession(username = "player_one") {
 function mockClient(partial: Partial<NakamaGateway> = {}): NakamaGateway {
   return {
     authenticateEmail: vi.fn(),
+    authenticateCustom: vi.fn(),
     sessionRefresh: vi.fn(),
     sessionLogout: vi.fn(),
     getAccount: vi.fn().mockResolvedValue({
@@ -38,6 +39,12 @@ function mockClient(partial: Partial<NakamaGateway> = {}): NakamaGateway {
     deleteFriends: vi.fn().mockResolvedValue(true),
     writeStorageObjects: vi.fn(),
     readStorageObjects: vi.fn(),
+    deleteStorageObjects: vi.fn(),
+    linkCustom: vi.fn().mockResolvedValue(true),
+    linkEmail: vi.fn().mockResolvedValue(true),
+    listStorageObjects: vi.fn().mockResolvedValue({ objects: [] }),
+    rpc: vi.fn(),
+    rpcHttpKey: vi.fn(),
     ...partial,
   };
 }
@@ -67,11 +74,22 @@ describe("friends", () => {
     ).rejects.toMatchObject({ code: "CANNOT_ADD_SELF" });
   });
 
-  it("sends a friend request by username", async () => {
-    const client = mockClient();
-    await addFriendByUsername(makeSession(), "other_player", client);
-    expect(client.addFriends).toHaveBeenCalledWith(expect.anything(), undefined, [
+  it("sends a friend request using the stored username, ignoring typed case", async () => {
+    const session = makeSession();
+    const client = mockClient({
+      getUsers: vi.fn().mockImplementation(async (_session, _ids, usernames?: string[]) => {
+        const hit = usernames?.some((name) => name.toLowerCase() === "other_player");
+        return hit
+          ? { users: [{ id: "user-2", username: "other_player", display_name: "Other" }] }
+          : { users: [] };
+      }),
+    });
+
+    await addFriendByUsername(session, "Other_Player", client);
+    expect(client.getUsers).toHaveBeenCalledWith(session, undefined, [
+      "Other_Player",
       "other_player",
     ]);
+    expect(client.addFriends).toHaveBeenCalledWith(session, undefined, ["other_player"]);
   });
 });

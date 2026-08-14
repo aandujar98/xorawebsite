@@ -131,7 +131,8 @@ export type RegisterInput = {
 };
 
 export type LoginInput = {
-  email: string;
+  email?: string;
+  identifier?: string;
   password: string;
   rememberMe: boolean;
 };
@@ -144,7 +145,7 @@ export type ValidatedRegisterInput = {
 };
 
 export type ValidatedLoginInput = {
-  email: string;
+  identifier: string;
   password: string;
   rememberMe: boolean;
 };
@@ -186,16 +187,30 @@ export function validateRegisterInput(input: RegisterInput): {
   };
 }
 
+export function looksLikeEmail(value: string): boolean {
+  return value.includes("@");
+}
+
 export function validateLoginInput(input: LoginInput): {
   values?: ValidatedLoginInput;
   errors: FieldErrors;
   code?: string;
 } {
   const errors: FieldErrors = {};
-  const emailError = validateEmail(input.email);
+  const identifier = (input.identifier ?? input.email ?? "").trim();
 
-  if (emailError) {
-    errors.email = emailError;
+  if (!identifier) {
+    errors.identifier = "INVALID_CREDENTIALS";
+  } else if (looksLikeEmail(identifier)) {
+    const emailError = validateEmail(identifier);
+    if (emailError) {
+      errors.identifier = emailError;
+    }
+  } else {
+    const usernameError = validateUsername(identifier);
+    if (usernameError) {
+      errors.identifier = "INVALID_CREDENTIALS";
+    }
   }
 
   if (!input.password) {
@@ -209,7 +224,9 @@ export function validateLoginInput(input: LoginInput): {
   return {
     errors,
     values: {
-      email: normalizeEmail(input.email),
+      identifier: looksLikeEmail(identifier)
+        ? normalizeEmail(identifier)
+        : identifier,
       password: input.password,
       rememberMe: Boolean(input.rememberMe),
     },
@@ -258,3 +275,67 @@ export type ProfileUpdateInputLike = {
   avatarUrl: string;
   location?: string;
 };
+
+export type PasswordChangeInput = {
+  currentPassword: string;
+  password: string;
+  confirmPassword: string;
+};
+
+export type ResetPasswordInput = {
+  token: string;
+  password: string;
+  confirmPassword: string;
+};
+
+export function validatePasswordChangeInput(input: PasswordChangeInput): {
+  values?: { currentPassword: string; password: string };
+  errors: FieldErrors;
+  code?: string;
+} {
+  const errors: FieldErrors = {};
+  if (!input.currentPassword) {
+    errors.currentPassword = "INVALID_CREDENTIALS";
+  }
+  const passwordError = validatePassword(input.password);
+  const matchError = validatePasswordMatch(input.password, input.confirmPassword);
+  if (passwordError) errors.password = passwordError;
+  if (matchError) errors.confirmPassword = matchError;
+
+  if (Object.keys(errors).length > 0) {
+    return { errors, code: Object.values(errors)[0] };
+  }
+
+  return {
+    errors,
+    values: {
+      currentPassword: input.currentPassword,
+      password: input.password,
+    },
+  };
+}
+
+export function validateResetPasswordInput(input: ResetPasswordInput): {
+  values?: { token: string; password: string };
+  errors: FieldErrors;
+  code?: string;
+} {
+  const errors: FieldErrors = {};
+  const token = input.token.trim();
+  if (!token) {
+    errors.token = "INVALID_RESET_TOKEN";
+  }
+  const passwordError = validatePassword(input.password);
+  const matchError = validatePasswordMatch(input.password, input.confirmPassword);
+  if (passwordError) errors.password = passwordError;
+  if (matchError) errors.confirmPassword = matchError;
+
+  if (Object.keys(errors).length > 0) {
+    return { errors, code: Object.values(errors)[0] };
+  }
+
+  return {
+    errors,
+    values: { token, password: input.password },
+  };
+}

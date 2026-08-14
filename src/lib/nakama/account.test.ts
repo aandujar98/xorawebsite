@@ -1,7 +1,8 @@
 import { Session } from "@heroiclabs/nakama-js";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { deleteCurrentAccount, getProfileByUsername, toPublicAccount, updateCurrentProfile } from "@/lib/nakama/account";
 import type { NakamaGateway } from "@/lib/nakama/client";
+import { resetUsernameIndexForTests } from "@/lib/nakama/username-index";
 
 function jwt(payload: Record<string, unknown>) {
   const header = Buffer.from(JSON.stringify({ alg: "none", typ: "JWT" })).toString(
@@ -18,6 +19,13 @@ function extraClient(): Pick<
   | "deleteFriends"
   | "writeStorageObjects"
   | "readStorageObjects"
+  | "authenticateCustom"
+  | "deleteStorageObjects"
+  | "linkCustom"
+  | "linkEmail"
+  | "listStorageObjects"
+  | "rpc"
+  | "rpcHttpKey"
 > {
   return {
     listFriends: vi.fn().mockResolvedValue({ friends: [] }),
@@ -25,6 +33,13 @@ function extraClient(): Pick<
     deleteFriends: vi.fn().mockResolvedValue(true),
     writeStorageObjects: vi.fn().mockResolvedValue({}),
     readStorageObjects: vi.fn().mockResolvedValue({ objects: [] }),
+    authenticateCustom: vi.fn().mockResolvedValue(makeSession("xora_lookup")),
+    deleteStorageObjects: vi.fn().mockResolvedValue(true),
+    linkCustom: vi.fn().mockResolvedValue(true),
+    linkEmail: vi.fn().mockResolvedValue(true),
+    listStorageObjects: vi.fn().mockResolvedValue({ objects: [] }),
+    rpc: vi.fn(),
+    rpcHttpKey: vi.fn(),
   };
 }
 
@@ -38,6 +53,10 @@ function makeSession(username = "player_one") {
 }
 
 describe("account mapping and profile updates", () => {
+  beforeEach(() => {
+    resetUsernameIndexForTests();
+  });
+
   it("does not claim email verification", () => {
     const account = toPublicAccount({
       email: "player@xoranetwork.com",
@@ -152,7 +171,11 @@ describe("account mapping and profile updates", () => {
       ...extraClient(),
     };
 
-    const profile = await getProfileByUsername(session, "other_player", client);
+    const profile = await getProfileByUsername(session, "Other_Player", client);
+    expect(client.getUsers).toHaveBeenCalledWith(session, undefined, [
+      "Other_Player",
+      "other_player",
+    ]);
     expect(profile.username).toBe("other_player");
     expect(profile.id).toBe("other_player");
     expect(profile.displayName).toBe("Other Player");

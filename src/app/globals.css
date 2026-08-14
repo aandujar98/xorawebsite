@@ -332,12 +332,92 @@ textarea {
   font-weight: 650;
 }
 
-.field input {
+.field input,
+.field textarea,
+.field select {
   min-height: 48px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  background: rgba(8, 40, 70, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(247, 251, 255, 0.92);
+  color: var(--sky-deep);
+  caret-color: var(--sky-deep);
   padding: 0.7rem 0.9rem;
+}
+
+.field textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: rgba(12, 61, 99, 0.55);
+}
+
+.field input:-webkit-autofill,
+.field textarea:-webkit-autofill {
+  -webkit-text-fill-color: var(--sky-deep);
+  box-shadow: 0 0 0 1000px #f7fbff inset;
+  caret-color: var(--sky-deep);
+}
+
+.nav-bell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.nav-count {
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: white;
+  color: var(--sky-deep);
+  font-size: 0.72rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notice-list,
+.chat-list {
+  list-style: none;
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.notice-row a,
+.chat-row {
+  display: grid;
+  gap: 0.25rem;
+  text-decoration: none;
+  padding: 0.85rem 0.95rem;
+  border-radius: 16px;
+  background: rgba(8, 40, 70, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.notice-row.unread a,
+.chat-row.mine {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.32);
+}
+
+.notice-row time,
+.chat-row time {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.chat-row.mine {
+  margin-left: 12%;
+}
+
+.chat-row:not(.mine) {
+  margin-right: 12%;
 }
 
 .field-hint,

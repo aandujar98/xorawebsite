@@ -2,6 +2,7 @@
 
 import { SignOutButton } from "@/components/auth/SignOutButton";
 import { useAccount } from "@/components/auth/AccountGate";
+import { ChangePasswordForm } from "@/components/profile/ChangePasswordForm";
 import { DeleteAccountSection } from "@/components/profile/DeleteAccountSection";
 
 export function SecurityPanel() {
@@ -11,11 +12,11 @@ export function SecurityPanel() {
     <div className="stack">
       <section className="glass">
         <h2>Change password</h2>
-        <p className="badge">Coming Soon</p>
         <p>
-          Password changes from the website are not available yet. A safe reset
-          flow needs an email workflow that is not implemented.
+          Choose a new password for this XOrA Network account. Use at least 8
+          characters with a letter and a number.
         </p>
+        <ChangePasswordForm />
       </section>
 
       <section className="glass">

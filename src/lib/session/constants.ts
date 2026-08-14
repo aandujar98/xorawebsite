@@ -5,7 +5,15 @@ export const REMEMBER_COOKIE = "xora_rm";
 
 export const CSRF_HEADER = "x-csrf-token";
 
-export const PROTECTED_PATHS = ["/dashboard", "/profile", "/security", "/friends", "/u"] as const;
+export const PROTECTED_PATHS = [
+  "/dashboard",
+  "/profile",
+  "/security",
+  "/friends",
+  "/notifications",
+  "/messages",
+  "/u",
+] as const;
 export const AUTH_PATHS = ["/login", "/register"] as const;
 
 export function isProtectedPath(pathname: string): boolean {

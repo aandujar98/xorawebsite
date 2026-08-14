@@ -30,7 +30,7 @@ export async function uploadCurrentAvatar(
   }
 
   const bytes = new Uint8Array(await file.arrayBuffer());
-  const mime = sniffImageMime(bytes);
+  const mime = sniffImageMime(bytes, file.type);
   if (!mime) {
     throw new AppError("INVALID_AVATAR_IMAGE");
   }

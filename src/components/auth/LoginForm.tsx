@@ -12,7 +12,7 @@ import { FRIENDLY_ERROR_MESSAGES, type AppErrorCode } from "@/types/api";
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -23,7 +23,7 @@ export function LoginForm() {
     event.preventDefault();
     setMessage(null);
 
-    const validated = validateLoginInput({ email, password, rememberMe });
+    const validated = validateLoginInput({ identifier, password, rememberMe });
     if (!validated.values) {
       setFieldErrors(validated.errors);
       setMessage(
@@ -38,7 +38,7 @@ export function LoginForm() {
     try {
       await apiRequest("/api/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email, password, rememberMe }),
+        body: JSON.stringify({ identifier, password, rememberMe }),
       });
       router.replace(safeNextPath(searchParams.get("next")));
       router.refresh();
@@ -55,14 +55,21 @@ export function LoginForm() {
 
   return (
     <form className="auth-form" onSubmit={onSubmit} noValidate>
-      <Field id="email" label="Email" error={fieldErrors.email}>
+      <Field
+        id="identifier"
+        label="Email or username"
+        error={fieldErrors.identifier ?? fieldErrors.email}
+      >
         <input
-          id="email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
+          id="identifier"
+          name="identifier"
+          type="text"
+          autoComplete="username"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          value={identifier}
+          onChange={(event) => setIdentifier(event.target.value)}
           required
         />
       </Field>

@@ -35,7 +35,7 @@ export function FeatureRow() {
               <div className="feature-orb" aria-hidden="true" />
               <h3>{feature.title}</h3>
               <p>{feature.description}</p>
-              {feature.title === "Friends" ? (
+              {feature.title === "Friends" || feature.title === "Messaging" ? (
                 <span className="badge">Available</span>
               ) : (
                 <span className="badge">Coming Soon</span>

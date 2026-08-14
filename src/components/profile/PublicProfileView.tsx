@@ -153,14 +153,22 @@ export function PublicProfileView({ username }: { username: string }) {
         ) : (
           <div className="button-row">
             {relation === "friend" ? (
-              <button
-                className="button button-ghost"
-                type="button"
-                disabled={friendPending}
-                onClick={() => void changeFriend("DELETE")}
-              >
-                Remove friend
-              </button>
+              <>
+                <Link
+                  className="button button-primary"
+                  href={`/messages/${encodeURIComponent(result.profile.username)}`}
+                >
+                  Message
+                </Link>
+                <button
+                  className="button button-ghost"
+                  type="button"
+                  disabled={friendPending}
+                  onClick={() => void changeFriend("DELETE")}
+                >
+                  Remove friend
+                </button>
+              </>
             ) : relation === "incoming" ? (
               <>
                 <button

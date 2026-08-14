@@ -68,7 +68,7 @@ export function AvatarUpload() {
       <div>
         <p className="eyebrow">Profile photo</p>
         <h3>Upload from this device</h3>
-        <p className="muted">JPEG, PNG, WebP, or GIF. 512 KB or smaller.</p>
+        <p className="muted">JPEG, PNG, WebP, or GIF. 1 MB or smaller.</p>
         <label className="button button-light file-button">
           {pending ? "Uploading..." : "Choose photo"}
           <input

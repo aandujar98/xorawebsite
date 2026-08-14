@@ -18,6 +18,11 @@ describe("avatar uploads", () => {
     ).toBe("image/webp");
   });
 
+  it("accepts GIF files that only start with the GIF signature", () => {
+    expect(sniffImageMime(Uint8Array.from([0x47, 0x49, 0x46, 0x00]))).toBe("image/gif");
+    expect(sniffImageMime(Uint8Array.from([0x00, 0x01]), "image/gif")).toBe("image/gif");
+  });
+
   it("rejects non-image bytes", () => {
     expect(sniffImageMime(Uint8Array.from([0x00, 0x01, 0x02]))).toBeNull();
   });

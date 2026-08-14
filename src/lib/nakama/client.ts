@@ -15,6 +15,7 @@ export type NakamaUserSnapshot = {
 
 export type NakamaAccountSnapshot = {
   email?: string;
+  custom_id?: string;
   disable_time?: string;
   devices?: Array<{ id?: string }>;
   user?: NakamaUserSnapshot;
@@ -51,6 +52,11 @@ export type NakamaGateway = {
   authenticateEmail: (
     email: string,
     password: string,
+    create?: boolean,
+    username?: string,
+  ) => Promise<Session>;
+  authenticateCustom: (
+    id: string,
     create?: boolean,
     username?: string,
   ) => Promise<Session>;
@@ -97,6 +103,37 @@ export type NakamaGateway = {
       object_ids?: Array<{ collection?: string; key?: string; user_id?: string }>;
     },
   ) => Promise<{ objects?: NakamaStorageObject[] }>;
+  deleteStorageObjects: (
+    session: Session,
+    request: {
+      object_ids?: Array<{ collection?: string; key?: string }>;
+    },
+  ) => Promise<boolean>;
+  linkCustom: (
+    session: Session,
+    request: { id?: string },
+  ) => Promise<boolean>;
+  linkEmail: (
+    session: Session,
+    request: { email?: string; password?: string },
+  ) => Promise<boolean>;
+  listStorageObjects: (
+    session: Session,
+    collection: string,
+    userId?: string,
+    limit?: number,
+    cursor?: string,
+  ) => Promise<{ objects?: NakamaStorageObject[]; cursor?: string }>;
+  rpc: (
+    session: Session,
+    id: string,
+    payload: object,
+  ) => Promise<{ payload?: unknown }>;
+  rpcHttpKey: (
+    httpKey: string,
+    id: string,
+    payload?: object,
+  ) => Promise<{ payload?: unknown }>;
 };
 
 let cachedClient: Client | null = null;

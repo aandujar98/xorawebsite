@@ -65,6 +65,10 @@ export async function mapNakamaError(error: unknown): Promise<never> {
       throw new AppError("INVALID_CREDENTIALS");
     }
 
+    if (error.status === 400 && (message.includes("storage") || message.includes("exceeded") || message.includes("too large") || message.includes("max value"))) {
+      throw new AppError("AVATAR_TOO_LARGE");
+    }
+
     if (error.status === 400 && message.includes("username")) {
       throw new AppError("INVALID_USERNAME");
     }

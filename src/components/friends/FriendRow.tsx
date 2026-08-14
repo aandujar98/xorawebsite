@@ -58,6 +58,11 @@ export function FriendRow({
             Accept
           </button>
         ) : null}
+        {entry.state === "friend" ? (
+          <Link className="button button-ghost" href={`/messages/${encodeURIComponent(entry.username)}`}>
+            Message
+          </Link>
+        ) : null}
         {actions.includes("remove") ? (
           <button
             className="button button-ghost"
