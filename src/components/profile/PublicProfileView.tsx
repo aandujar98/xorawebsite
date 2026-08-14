@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount } from "@/components/auth/AccountGate";
 import { ProfileHero } from "@/components/profile/ProfileHero";
 import { apiRequest, ApiClientError } from "@/lib/api/browser";
@@ -32,16 +32,13 @@ async function loadProfile(username: string): Promise<ProfileQuery> {
 
 export function PublicProfileView({ username }: { username: string }) {
   const { account } = useAccount();
+  const isOwn = account.username.toLowerCase() === username.toLowerCase();
   const [result, setResult] = useState<ProfileQuery | "loading">("loading");
   const [relation, setRelation] = useState<FriendEntry["state"] | "none" | "loading">(
     isOwn ? "none" : "loading",
   );
   const [friendPending, setFriendPending] = useState(false);
   const [friendMessage, setFriendMessage] = useState<string | null>(null);
-  const isOwn = useMemo(
-    () => account.username.toLowerCase() === username.toLowerCase(),
-    [account.username, username],
-  );
 
   useEffect(() => {
     let cancelled = false;
